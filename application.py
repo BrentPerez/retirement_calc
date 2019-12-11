@@ -7,7 +7,7 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required, usd, compound
 
 # Configure application
 app = Flask(__name__)
@@ -36,56 +36,12 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///finance.db")
 
-# Make sure API key is set
-if not os.environ.get("API_KEY"):
-    raise RuntimeError("API_KEY not set")
-
 
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
-    return apology("TODO", 200)
-
-
-@app.route("/buy", methods=["GET", "POST"])
-@login_required
-def buy():
-    """Buy shares of stock"""
-    if request.method == "POST":
-        symbol = request.form.get("symbol")
-        try:
-            shares = int(request.form.get("shares"))
-        except ValueError:
-            return apology("invalid number of shares", 400)
-        pricelook = lookup(symbol)
-        if not pricelook:
-            return apology("must provide valid stock symbol", 400)
-        price = pricelook["price"]
-        charge = price * shares
-        userMoney = db.execute("SELECT cash FROM users WHERE id = :user_id", user_id=session["user_id"])[0]["cash"]
-        if shares <= 0:
-            return apology("invalid number of shares", 400)
-        elif not shares:
-            return apology("invalid number of shares", 400)
-        elif userMoney < charge:
-            return apology("not enough cash in account", 400)
-        return render_template("portfolio.html", charge=charge)
-    else:
-        return render_template("buy.html")
-
-
-@app.route("/check", methods=["GET"])
-def check():
-    """Return true if username available, else false, in JSON format"""
-    return jsonify("TODO")
-
-
-@app.route("/history")
-@login_required
-def history():
-    """Show history of transactions"""
-    return apology("TODO")
+    """Show portfolio of current retirement stats"""
+    return render_template("portfolio.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -118,7 +74,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
-        return redirect("/", 200)
+        return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -136,18 +92,48 @@ def logout():
     return redirect("/")
 
 
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-    """Get stock quote."""
+@app.route("/edit", methods=["GET", "POST"])
+def edit():
+    """Edit user stats"""
     if request.method == "POST":
-        quoted = lookup(request.form.get("symbol"))
-        if not quoted:
-            return apology("invalid stock symbol", 400)
-        quoted["price"] = usd(quoted["price"])
-        return render_template("quoted.html", quoted=quoted)
+        # Import variables entered by user
+        savings = int(request.form.get("savings"))
+        salary = int(request.form.get("salary"))
+        savingRate = float(request.form.get("savingRate"))
+        age = int(request.form.get("age"))
+        yieldAnnual = float(request.form.get("yieldAnnual"))
+        retirementAge = int(request.form.get("retirementAge"))
+        expense = float(request.form.get("expense"))
+
+        # Set up variables for growth calculation
+        yearsSaving = (retirementAge - age)
+        contribution = (savingRate / 100) * salary
+        initialReturn = compound(savings, yieldAnnual, yearsSaving)
+        totalBalance = initialReturn
+
+        # Set up array for graph
+        yearByYear = []
+        yearByYear.append([age,savings])
+
+        # Total compounding interest w/ annual contribution return
+        for year in range(yearsSaving):
+            numYear = yearsSaving - year
+            totalBalance = totalBalance + compound(contribution, yieldAnnual, numYear)
+
+            # Inset into array for graph
+            myAge = age + year + 1
+            yearByYear.append([myAge,totalBalance])
+
+        # Age at which retirement ends w/o interest
+        empty = round((totalBalance / expense) + retirementAge)
+
+        principle = savings + (yearsSaving * (salary * (savingRate / 100)))
+        interest = totalBalance - principle
+
+
+        return render_template("stats.html", totalBalance=usd(totalBalance), empty=empty, principle=usd(principle), interest=usd(interest), savings=savings, salary=salary, savingRate=savingRate, age=age, yieldAnnual=yieldAnnual, retirementAge=retirementAge, expense=expense)
     else:
-        return render_template("quote.html")
+        return render_template("portfolio.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -179,13 +165,6 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/sell", methods=["GET", "POST"])
-@login_required
-def sell():
-    """Sell shares of stock"""
-    return apology("TODO")
-
-
 def errorhandler(e):
     """Handle error"""
     if not isinstance(e, HTTPException):
@@ -196,3 +175,6 @@ def errorhandler(e):
 # Listen for errors
 for code in default_exceptions:
     app.errorhandler(code)(errorhandler)
+
+if __name__ == "__main__":
+    app.run(debug=True)

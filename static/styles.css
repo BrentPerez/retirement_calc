@@ -28,7 +28,7 @@ main .form-control
     display: inline-block;
 
     /* override Bootstrap's 100% width for form controls */
-    width: auto;
+    width: 90%;
 }
 
 main
@@ -44,4 +44,31 @@ main img
 {
     /* constrain images on small screens */
     max-width: 100%;
+}
+
+body {
+    background: rgb(178,175,227);
+    background: -webkit-linear-gradient(left, rgba(178,175,227,1) 0%, rgba(118,118,231,1) 35%, rgba(0,212,255,1) 100%);
+    background: -moz-linear-gradient(left, rgba(178,175,227,1) 0%, rgba(118,118,231,1) 35%, rgba(0,212,255,1) 100%);
+    background: -o-linear-gradient(left, rgba(178,175,227,1) 0%, rgba(118,118,231,1) 35%, rgba(0,212,255,1) 100%);
+    background: linear-gradient(to right, rgba(178,175,227,1) 0%, rgba(118,118,231,1) 35%, rgba(0,212,255,1) 100%);
+}
+
+.responsive {
+    max-width: 75%;
+    height: auto;
+}
+
+img {
+    padding: 15px;
+}
+
+.displayBox {
+    width: 100%;
+}
+
+.card-body {
+    overflow-y: auto;
+    float: left;
+    padding: 1rem;
 }
