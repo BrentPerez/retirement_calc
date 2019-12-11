@@ -1,1 +1,1 @@
-web: flask run;
+web: flask run; gunicorn budget-application-cs50:app
