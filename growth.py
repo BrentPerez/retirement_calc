@@ -3,12 +3,12 @@
 from helpers import usd
 
 # Define variables
-savings = float(input("Current savings: "))
-salary = float(input("Current Salary: "))
-savingRate = float(input("Percent of Salary Saved: "))
-age = int(input("Current Age: "))
-yieldAnnual = float(input("Expected Annual Return: "))
-retirementAge = int(input("Age of Retirement: "))
+savings = 1000
+salary = 55000
+savingRate = 15
+age = 22
+yieldAnnual = 4.2
+retirementAge = 67
 expense = 100000
 contribution = (savingRate / 100) * salary
 yearsSaving = (retirementAge - age)
