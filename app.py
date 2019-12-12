@@ -165,6 +165,8 @@ def edit():
         fig = Figure()
         ax = fig.subplots()
         ax.plot(ageByYear, moneyByYear)
+        ax.set_xlabel('Age')
+        ax.set_ylabel('Cash')
 
         # Save it to a temporary buffer
         buf = BytesIO()
