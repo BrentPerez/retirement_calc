@@ -1,11 +1,17 @@
 import os
 
+import base64
+from io import BytesIO
 from cs50 import SQL
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
+
+
 
 from helpers import apology, login_required, usd, compound
 
@@ -112,6 +118,7 @@ def edit():
         initialReturn = compound(savings, yieldAnnual, yearsSaving)
         totalBalance = initialReturn
         empty = 0
+        principle = 0
 
         # Set up arrays for graph
         ageByYear = []
@@ -122,6 +129,7 @@ def edit():
         # Compounding interest while saving
         for year in range(yearsSaving):
             contribution = contribution * ((payIncrease / 100) + 1)
+            principle = principle + contribution
             totalBalance = compound(totalBalance, yieldAnnual, 1) + compound(contribution, yieldAnnual, 1)
             # Insert into array for graph
             myAge = age + year + 1
@@ -145,23 +153,26 @@ def edit():
                 empty = myAge
                 break
 
-        principle = savings + (yearsSaving * (salary * (savingRate / 100)))
-        interest = totalBalance - principle
-        '''
+        interest = peak - principle
+        
         if empty > 0:
-            print("Peak savings = " + str(usd(peak)))
-            print("Retirment will run out at age " + str(empty))
+            peak = usd(peak)
+            empty = empty
         else:
-            print("Retirement will last indefinitely with set expense")
-            print("You will have " + str(usd(totalBalance)) + " at age 120")
+            empty = "never"
+            peak = (usd(totalBalance))
 
-        plt.plot(ageByYear, moneyByYear)
-        plt.ylabel('Cash')
-        plt.xlabel('Age')
-        plt.show()
-        '''
+        fig = Figure()
+        ax = fig.subplots()
+        ax.plot(ageByYear, moneyByYear)
 
-        return render_template("stats.html", totalBalance=usd(totalBalance), empty=empty, principle=usd(principle), interest=usd(interest), savings=savings, salary=salary, savingRate=savingRate, age=age, yieldAnnual=yieldAnnual, retirementAge=retirementAge, expense=expense)
+        # Save it to a temporary buffer
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        #Embed the result in the html output
+        graph = base64.b64encode(buf.getbuffer()).decode("ascii")
+
+        return render_template("stats.html", totalBalance=usd(totalBalance), empty=empty, principle=usd(principle), interest=usd(interest), savings=savings, salary=salary, savingRate=savingRate, age=age, yieldAnnual=yieldAnnual, retirementAge=retirementAge, expense=expense, payIncrease=payIncrease, graph=graph, peak=peak)
     else:
         return render_template("portfolio.html")
 
