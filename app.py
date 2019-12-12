@@ -112,6 +112,11 @@ def edit():
         retirementAge = int(request.form.get("retirementAge"))
         expense = float(request.form.get("expense"))
 
+        # Validate input
+        if age >= retirementAge:
+            return apology("Current age has to be less than retirement age", 400)
+        
+
         # Set up variables for growth calculation
         yearsSaving = (retirementAge - age)
         contribution = (savingRate / 100) * salary
