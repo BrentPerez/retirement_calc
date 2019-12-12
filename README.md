@@ -1,6 +1,6 @@
 # Retirement Calculator
+### Link 
 https://retirement-calc-cs50.herokuapp.com/
-I built this retirement calculator for the final project in Harvard's CS50 class.
 
 ## How it works
 This web application allows users to enter in their desired information and lets them view a basic overview of what their retirement finances could look like. This program can be launched using the link above or using flask from the terminal. If there are any problems with the calculation please send an email to brentperez97@gmail.com.
