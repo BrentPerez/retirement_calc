@@ -102,6 +102,7 @@ def edit():
         savingRate = float(request.form.get("savingRate"))
         age = int(request.form.get("age"))
         yieldAnnual = float(request.form.get("yieldAnnual"))
+        payIncrease = float(request.form.get("payIncrease"))
         retirementAge = int(request.form.get("retirementAge"))
         expense = float(request.form.get("expense"))
 
@@ -110,26 +111,55 @@ def edit():
         contribution = (savingRate / 100) * salary
         initialReturn = compound(savings, yieldAnnual, yearsSaving)
         totalBalance = initialReturn
+        empty = 0
 
-        # Set up array for graph
-        yearByYear = []
-        yearByYear.append([age,savings])
+        # Set up arrays for graph
+        ageByYear = []
+        moneyByYear = []
+        ageByYear.append(age)
+        moneyByYear.append(savings)
 
-        # Total compounding interest w/ annual contribution return
+        # Compounding interest while saving
         for year in range(yearsSaving):
-            numYear = yearsSaving - year
-            totalBalance = totalBalance + compound(contribution, yieldAnnual, numYear)
-
-            # Inset into array for graph
+            contribution = contribution * ((payIncrease / 100) + 1)
+            totalBalance = compound(totalBalance, yieldAnnual, 1) + compound(contribution, yieldAnnual, 1)
+            # Insert into array for graph
             myAge = age + year + 1
-            yearByYear.append([myAge,totalBalance])
+            ageByYear.append(myAge)
+            moneyByYear.append(totalBalance)
+        peak = totalBalance
 
-        # Age at which retirement ends w/o interest
-        empty = round((totalBalance / expense) + retirementAge)
+        # Interest in retirement
+        for x in range(120):
+            if totalBalance > 0:
+                if myAge > 120:
+                    break
+                else:
+                    totalBalance = compound((totalBalance - expense), yieldAnnual, 1)
+                    myAge = myAge + 1
+                    ageByYear.append(myAge)
+                    moneyByYear.append(totalBalance)
+
+            # Years supported by retirement
+            else:
+                empty = myAge
+                break
 
         principle = savings + (yearsSaving * (salary * (savingRate / 100)))
         interest = totalBalance - principle
+        '''
+        if empty > 0:
+            print("Peak savings = " + str(usd(peak)))
+            print("Retirment will run out at age " + str(empty))
+        else:
+            print("Retirement will last indefinitely with set expense")
+            print("You will have " + str(usd(totalBalance)) + " at age 120")
 
+        plt.plot(ageByYear, moneyByYear)
+        plt.ylabel('Cash')
+        plt.xlabel('Age')
+        plt.show()
+        '''
 
         return render_template("stats.html", totalBalance=usd(totalBalance), empty=empty, principle=usd(principle), interest=usd(interest), savings=savings, salary=salary, savingRate=savingRate, age=age, yieldAnnual=yieldAnnual, retirementAge=retirementAge, expense=expense)
     else:

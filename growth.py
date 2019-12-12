@@ -1,6 +1,7 @@
 # Test bed to make compounding interest with a yearly contribution (begginingg of year)
 # Compouning interest: A = P(1 + (r/n))^nt
 from helpers import usd
+import matplotlib.pyplot as plt
 
 # Define variables
 savings = 1000
@@ -8,7 +9,8 @@ salary = 55000
 savingRate = 15
 age = 22
 yieldAnnual = 4.2
-retirementAge = 67
+retirementAge = 80
+payIncrease = 2.3
 expense = 100000
 contribution = (savingRate / 100) * salary
 yearsSaving = (retirementAge - age)
@@ -16,26 +18,52 @@ p = savings
 x = pow((1 + (yieldAnnual / 100)), yearsSaving)
 a = p * x
 totalBalance = a
+empty = 0;
 
 # compounding interest function
 def compound(P, r, t):
     A = P * (pow((1 + (r / 100)), t))
     return A
 
-yearByYear = []
-yearByYear.append([age,savings])
+ageByYear = []
+moneyByYear = []
+ageByYear.append(age)
+moneyByYear.append(savings)
 
+# Interest while saving
 for year in range(yearsSaving):
-    numYear = yearsSaving - year
-    totalBalance = totalBalance + compound(contribution, yieldAnnual, numYear)
+    contribution = contribution * ((payIncrease / 100) + 1)
+    totalBalance = compound(totalBalance, yieldAnnual, 1) + compound(contribution, yieldAnnual, 1)
     # Insert into array for graph
     myAge = age + year + 1
-    yearByYear.append([myAge,totalBalance])
+    ageByYear.append(myAge)
+    moneyByYear.append(totalBalance)
+peak = totalBalance
 
-# Years supported by retirement w/o interest
-empty = (totalBalance / expense) + retirementAge
+# Interest in retirement
+for x in range(120):
+    if totalBalance > 0:
+        if myAge > 120:
+            break
+        else:
+            totalBalance = compound((totalBalance - expense), yieldAnnual, 1)
+            myAge = myAge + 1
+            ageByYear.append(myAge)
+            moneyByYear.append(totalBalance)
 
+    # Years supported by retirement
+    else:
+        empty = myAge
+        break
 
-print("Retirment will run out at age " + "{:.1f}".format(empty))
-print(usd(totalBalance))
+if empty > 0:
+    print("Peak savings = " + str(usd(peak)))
+    print("Retirment will run out at age " + str(empty))
+else:
+    print("Retirement will last indefinitely with set expense")
+    print("You will have " + str(usd(totalBalance)) + " at age 120")
 
+plt.plot(ageByYear, moneyByYear)
+plt.ylabel('Cash')
+plt.xlabel('Age')
+plt.show()
