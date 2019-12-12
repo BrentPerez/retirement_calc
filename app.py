@@ -200,7 +200,7 @@ def register():
         rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
         session["user_id"] = rows[0]["id"]
         # Return to homepage
-        return redirect("/", 200)
+        return redirect("/")
 
     else:
         return render_template("register.html")
